@@ -58,7 +58,7 @@ up: down
 	docker compose up --detach
 
 # --------------------
-# Deploy script (PowerShell)
+# Deploy script
 # --------------------
 deploy:
 	$env:AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID); \

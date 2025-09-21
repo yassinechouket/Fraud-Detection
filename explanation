@@ -163,3 +163,94 @@ Stage 1 (big build image) → produces app.jar
 Stage 2 (tiny runtime image) → runs app.jar
 
 That way, you’d have a picture in your head of how multi-stage builds “cut out the fat”?
+
+
+
+
+
+
+
+
+
+
+
+
+
+-------------------------------------------------------------------------------------------------------
+
+Exactly 👍 using the Git commit SHA as your Docker image tag is a very common and smart practice in CI/CD pipelines. Let me break it down for you:
+
+🔹 Why use the Git commit SHA as tag?
+
+Uniqueness
+
+Every commit in Git has a unique SHA (e.g., 24b8804e4f99a10e62c582b5d1f7e266fdcf76f4).
+
+If you use this as your image tag, every build will produce a unique image. No overwriting, no confusion.
+
+Traceability
+
+You can trace back any Docker image to the exact commit that built it.
+
+If something breaks in production, you know exactly which code version caused it.
+
+Consistency across environments
+
+Same SHA tag is used in dev, staging, prod → so you’re 100% sure you’re running the same image everywhere.
+
+Better caching
+
+CI/CD can cache layers better, since image names won’t be reused incorrectly.
+
+🔹 Example in a Makefile
+
+Here’s how you can do it:
+
+IMAGE_NAME = 742460038063.dkr.ecr.eu-west-3.amazonaws.com/spring-fraud-service
+GIT_SHA    = $(shell git rev-parse HEAD)
+
+build-image:
+	docker build -t $(IMAGE_NAME):$(GIT_SHA) .
+
+push-image:
+	docker push $(IMAGE_NAME):$(GIT_SHA)
+
+build-image-push: build-image push-image
+
+🔹 In GitHub Actions
+
+You can grab the SHA with github.sha:
+
+- name: Build Docker image
+  run: |
+    IMAGE_NAME=742460038063.dkr.ecr.eu-west-3.amazonaws.com/spring-fraud-service
+    docker build -t $IMAGE_NAME:${{ github.sha }} .
+    docker push $IMAGE_NAME:${{ github.sha }}
+
+🔹 Bonus: “latest” tag
+
+Some teams also push an extra tag like latest for convenience:
+
+docker tag $IMAGE_NAME:${GIT_SHA} $IMAGE_NAME:latest
+docker push $IMAGE_NAME:latest
+
+
+This way:
+
+latest = “most recent build” (easy for dev/testing).
+
+SHA = “exact commit” (for production traceability).
+
+✅ Summary:
+Using the Git commit SHA as the image tag guarantees unique, traceable, and consistent builds. It’s a best practice in pipelines.
+
+
+
+
+
+
+
+
+
+
+
