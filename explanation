@@ -1,0 +1,165 @@
+🟢 Stage 1: Build the JAR
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
+
+
+Base image: maven:3.9.9-eclipse-temurin-21-alpine
+→ This is a Maven + Java 21 + Alpine Linux image.
+
+It has Maven installed, so we can compile Java code and build the .jar.
+
+Example:
+If you run docker run -it maven:3.9.9-eclipse-temurin-21-alpine mvn -v, it prints the Maven version.
+
+WORKDIR /app
+
+
+Set the container’s working directory to /app.
+
+Every future command runs inside /app.
+
+COPY pom.xml .
+RUN mvn dependency:go-offline
+
+
+Copy pom.xml (just the project dependencies file) into the container.
+
+Run mvn dependency:go-offline → downloads all the dependencies listed in pom.xml.
+
+Why?: This creates a cache layer. So next time you rebuild, if pom.xml didn’t change, Docker won’t redownload everything.
+
+Example:
+If your app uses Spring Boot 3.2.5, it will download jars like:
+spring-boot-starter-web-3.2.5.jar, spring-boot-starter-data-mongodb-3.2.5.jar, etc.
+
+COPY src ./src
+
+
+Copy your source code into the container.
+
+So now /app inside the container looks like:
+
+/app
+  ├── pom.xml
+  └── src/
+       ├── main/java/com/example/...
+       └── main/resources/application.properties
+
+RUN mvn clean package -DskipTests
+
+
+Compile the project and build a fat JAR (includes your code + dependencies + resources).
+
+-DskipTests skips running unit tests to save build time.
+
+Example:
+This generates:
+
+/app/target/real-time-fraud-detection-0.0.1-SNAPSHOT.jar
+
+🟢 Stage 2: Runtime container
+FROM alpine:latest
+
+
+Start a fresh, tiny Alpine Linux image.
+
+This has no Maven, no compiler → only what we explicitly install.
+
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+ENV PATH="$JAVA_HOME/bin:${PATH}"
+ENV DOCKERIZE_VERSION=v0.9.3
+
+
+Define environment variables:
+
+JAVA_HOME → where Java will be installed.
+
+Update PATH so the java command is available.
+
+Set the version of dockerize we want to install.
+
+RUN apk update --no-cache \
+    && apk add --no-cache openjdk21 wget bash \
+    && wget -O - https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+       | tar xzf - -C /usr/local/bin \
+    && apk del wget
+
+
+apk = Alpine’s package manager.
+
+Install:
+
+openjdk21 → Java Runtime (needed to run the JAR).
+
+wget → temporary tool to download files.
+
+bash → shell.
+
+Download and install dockerize (a tool that waits for services like MongoDB/Postgres before starting the app).
+
+Remove wget after install → keep image small.
+
+Example:
+If MongoDB is not ready yet, you can run:
+
+dockerize -wait tcp://mongo:27017 -timeout 30s java -jar app.jar
+
+
+This waits up to 30s until MongoDB is up before starting your app.
+
+WORKDIR /app
+
+
+Switch to /app again in the runtime image.
+
+COPY --from=build /app/target/*.jar app.jar
+
+
+Copy the fat JAR built in stage 1 into this runtime image.
+
+Now /app/app.jar is your application.
+
+EXPOSE 8080
+
+
+Tells Docker that the app listens on port 8080.
+
+(This doesn’t open the port itself, but helps documentation and tools like docker run -p 8080:8080.)
+
+CMD ["java", "-jar", "app.jar"]
+
+
+Default command when the container starts: run the JAR.
+
+Equivalent to running:
+
+java -jar app.jar
+
+
+Example:
+When you do:
+
+docker run -p 8080:8080 fraud-app
+
+
+You can then open http://localhost:8080
+ and see your Spring Boot API running.
+
+🔑 Big Picture
+
+Stage 1 builds your app (app.jar) using Maven + JDK.
+
+Stage 2 runs it inside a minimal Alpine Linux + JRE + dockerize.
+
+Result:
+
+Small, fast container.
+
+Only contains what’s needed to run the app, not to build it.
+
+👉 Do you want me to also make a visual diagram showing:
+
+Stage 1 (big build image) → produces app.jar
+
+Stage 2 (tiny runtime image) → runs app.jar
+
+That way, you’d have a picture in your head of how multi-stage builds “cut out the fat”?
