@@ -7,7 +7,7 @@ GIT_SHA := $(shell git rev-parse HEAD)
 BUILD_IMAGE := $(AWS_ECR_DOMAIN)/spring-fraud-service
 BUILD_TAG := $(if $(BUILD_TAG),$(BUILD_TAG),latest)
 
-# Default goal
+
 .DEFAULT_GOAL := build
 
 # --------------------
