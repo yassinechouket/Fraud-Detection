@@ -76,4 +76,3 @@ jobs:
           
           chmod +x ./deploy.sh
           ./deploy.sh $ECS_CLUSTER_NAME $ECS_SERVICE_NAME
-  
