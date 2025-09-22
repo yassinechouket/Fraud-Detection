@@ -49,7 +49,7 @@ jobs:
       AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
       AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    # if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/prod'
+      # if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/prod'
     needs:
       - test
     runs-on: ubuntu-latest
@@ -72,4 +72,8 @@ jobs:
           echo "ECS_SERVICE_NAME: ${ECS_SERVICE_NAME}"
 
           make BUILD_TAG=$BUILD_TAG build-image-promote
-          make ECS_CLUSTER_NAME=$ECS_CLUSTER_NAME ECS_SERVICE_NAME=$ECS_SERVICE_NAME deploy
+
+          
+          chmod +x ./deploy.sh
+          ./deploy.sh $ECS_CLUSTER_NAME $ECS_SERVICE_NAME
+  
