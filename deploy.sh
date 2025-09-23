@@ -11,7 +11,7 @@ fi
 
 echo "Deploying to ECS Cluster: $ECS_CLUSTER_NAME, Service: $ECS_SERVICE_NAME"
 
-# Example: Update ECS service with new image
+
 aws ecs update-service \
     --cluster "$ECS_CLUSTER_NAME" \
     --service "$ECS_SERVICE_NAME" \
