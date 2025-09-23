@@ -65,7 +65,7 @@ jobs:
           fi
 
           ECS_CLUSTER_NAME=${BUILD_TAG}
-          ECS_SERVICE_NAME=fraud-detection-service
+          ECS_SERVICE_NAME=spring-fraud-service-service-1keloyyd
 
           echo "BUILD_TAG: ${BUILD_TAG}"
           echo "ECS_CLUSTER_NAME: ${ECS_CLUSTER_NAME}"
