@@ -30,6 +30,7 @@ public class CustomerSeeder {
         }
         // we send the customer data from here
         // another cmt to test som
+        // list of random customers
         List<Customer> customers = List.of(
                 new Customer("user_1", List.of(Merchant.AMAZON, Merchant.BEST_BUY), List.of(Category.TECH, Category.RETAIL), 150.0, 30.0, Currency.USD),
                 new Customer("user_2", List.of(Merchant.WALMART, Merchant.TARGET, Merchant.DUNNES_STORES), List.of(Category.RETAIL, Category.GROCERY), 80.0, 20.0, Currency.USD),
